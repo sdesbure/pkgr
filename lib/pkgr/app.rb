@@ -23,7 +23,7 @@ module Pkgr
       raise ArgumentError, "The given configuration file at '#{path}' is not a well-formed YAML file. Please fix it or remove it and run 'rake pkgr:setup'" unless @config.kind_of?(Hash)
       @config['_path'] = path
     end
-    
+
     def write_config
       File.open(@config['_path'] || raise("Don't know where to save myself!"), "w+") {|f|
         YAML.dump(@config.reject{|k,v| k == '_path'}, f)
@@ -101,11 +101,11 @@ module Pkgr
     def version
       @config['version']
     end
-    
+
     def user
       @config.fetch('user') { name }
     end
-    
+
     def group
       @config.fetch('group') { name }
     end
@@ -226,13 +226,13 @@ module Pkgr
         # "sudo apt-get install #{debian_runtime_dependencies(true).join(" ")} -y",
         "sudo apt-get install #{debian_build_dependencies(true).join(" ")} -y",
         # Vendor bundler
-        "gem1.9.1 install bundler --no-ri --no-rdoc --version #{bundler_version} -i #{target_vendor}",
+        "gem install bundler --no-ri --no-rdoc --version #{bundler_version} -i #{target_vendor}",
         "GEM_HOME='#{target_vendor}' #{target_vendor}/bin/bundle install --deployment --without test development",
         "rm -rf #{target_vendor}/{cache,doc}",
         "dpkg-buildpackage -us -uc -d"
       ]
     end
-    
+
     def release_debian_package(host, apt_directory = nil)
       apt_directory ||= "/var/www/#{name}"
       latest = Dir[File.join(root, "pkg", "*.deb")].find{|file| file =~ /#{version}/}
