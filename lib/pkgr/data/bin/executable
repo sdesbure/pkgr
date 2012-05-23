@@ -6,7 +6,7 @@ config = YAML.load_file(::File.expand_path("../../config/pkgr.yml", __FILE__))
 
 require ::File.expand_path("../../config/boot", __FILE__)
 
-supported_commands = ["server", "rake", "console"]
+supported_commands = ["rake", "console"]
 command = ARGV.shift
 
 case command
@@ -22,14 +22,19 @@ when "console"
   ARGV.unshift("console")
   require 'rails/commands'
 when "server"
-  require 'thin'
-  rackup_file = ::File.expand_path('../../config.ru',  __FILE__)
   argv = ARGV
-  argv << ["-R", rackup_file] unless ARGV.include?("-R")
-  argv << ["-p", "8000"] unless ARGV.include?("-p")
-  argv << ["-e", "production"] unless ARGV.include?("-e")
-  argv << ["--tag", "#{config['name']}-#{config['version']}"] unless ARGV.include?("--tag")
-  Thin::Runner.new(argv.flatten).run!
+  if config['server'] == 'unicorn'
+    cmd = "bundle exec unicorn_rails #{argv.flatten.join(" ")}"
+    %x(#{cmd})
+  else
+    require 'thin'
+    rackup_file = ::File.expand_path('../../config.ru',  __FILE__)
+    argv << ["-R", rackup_file] unless ARGV.include?("-R")
+    argv << ["-p", "8000"] unless ARGV.include?("-p")
+    argv << ["-e", "production"] unless ARGV.include?("-e")
+    argv << ["--tag", "#{config['name']}-#{config['version']}"] unless ARGV.include?("--tag")
+    Thin::Runner.new(argv.flatten).run!
+  end
 else
   STDERR.puts "You must choose one of the following commands: #{supported_commands.inspect}"
   exit(1)
