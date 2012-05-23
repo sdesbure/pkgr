@@ -216,7 +216,7 @@ module Pkgr
         }
         sh cmd
         # Fetch the .deb, and put it in the `pkg` directory
-        sh "scp #{host}:/tmp/#{name}_#{version}*.deb pkg/"
+        sh "scp #{host}:/tmp/#{name}_#{version}* pkg/"
       end
     end
 
