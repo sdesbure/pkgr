@@ -4,7 +4,7 @@ require 'pkgr/version'
 require 'yaml'
 
 module Pkgr
-  class App
+  class BaseApp
     include RakeFileUtils
     attr_reader :root
     attr_reader :errors
@@ -139,16 +139,6 @@ module Pkgr
       puts "Correctly set up debian files."
     end
 
-    # Creates an executable file for easy launch of the server/console/rake tasks once it is installed.
-    # E.g. /usr/bin/my-app console, /usr/bin/my-app server start -p 8080
-    def setup_binary
-      target = File.join(root, "bin", name)
-      Pkgr.mkdir(File.dirname(target))
-      FileUtils.cp(File.expand_path("../data/bin/executable", __FILE__), target, :verbose => true)
-      FileUtils.chmod 0755, target, :verbose => true
-      puts "Correctly set up executable file. Try running './bin/#{name} console'."
-    end
-
     # FIXME: this is ugly
     def bump!(version_index = :patch, new_version = nil)
       unless version_index == :custom
@@ -201,45 +191,13 @@ module Pkgr
       end
     end
 
-    def build_debian_package(host)
-      puts "Building debian package on '#{host}'..."
-      Dir.chdir(root) do
-        Pkgr.mkdir("pkg")
-        archive = "#{name}-#{version}"
-        sh "scp #{File.expand_path("../data/config/pre_boot.rb", __FILE__)} #{host}:/tmp/"
-        cmd = %Q{
-          git archive #{git_ref} --prefix=#{archive}/ | ssh #{host} 'cat - > /tmp/#{archive}.tar &&
-            set -x && rm -rf /tmp/#{archive} &&
-            cd /tmp && tar xf #{archive}.tar && cd #{archive} &&
-            cat config/boot.rb >> /tmp/pre_boot.rb && cp -f /tmp/pre_boot.rb config/boot.rb &&
-            #{debian_steps.join(" &&\n")}'
-        }
-        sh cmd
-        # Fetch the .deb, and put it in the `pkg` directory
-        sh "scp #{host}:/tmp/#{name}_#{version}* pkg/"
-      end
-    end
-
-    def debian_steps
-      target_vendor = "vendor/bundle/ruby/1.9.1"
-      [
-        # "sudo apt-get install #{debian_runtime_dependencies(true).join(" ")} -y",
-        "sudo apt-get install #{debian_build_dependencies(true).join(" ")} -y",
-        # Vendor bundler
-        "gem install bundler --no-ri --no-rdoc --version #{bundler_version} -i #{target_vendor}",
-        "GEM_HOME='#{target_vendor}' #{target_vendor}/bin/bundle install --deployment --without test development",
-        "rm -rf #{target_vendor}/{cache,doc}",
-        "dpkg-buildpackage -us -uc -d"
-      ]
-    end
-
-    def release_debian_package(host, apt_directory = nil)
+    def release_debian_package(host, port = 22, apt_directory = nil)
       apt_directory ||= "/var/www/#{name}"
       latest = Dir[File.join(root, "pkg", "*.deb")].find{|file| file =~ /#{version}/}
       raise "No .deb available in pkg/" if latest.nil?
       latest_name = File.basename(latest)
-      sh "scp #{latest} #{host}:/tmp/"
-      sh "ssh #{host} 'sudo mkdir -p #{apt_directory} && sudo chown $USER #{apt_directory} && mv /tmp/#{latest_name} #{apt_directory} && cd #{apt_directory} && ( which dpkg-scanpackages || sudo apt-get update && sudo apt-get install dpkg-dev -y ) && dpkg-scanpackages . | gzip -f9 > Packages.gz'"
+      sh "scp -P #{port} #{latest} #{host}:/tmp/"
+      sh "ssh -p #{port} #{host} 'sudo mkdir -p #{apt_directory} && sudo chown $USER #{apt_directory} && mv /tmp/#{latest_name} #{apt_directory} && cd #{apt_directory} && ( which dpkg-scanpackages || sudo apt-get update && sudo apt-get install dpkg-dev -y ) && dpkg-scanpackages . | gzip -f9 > Packages.gz'"
       puts "****"
       puts "Now you just need to serve the '#{apt_directory}' directory over HTTP, and add a new source to your APT configuration on the production server:"
       puts "$ cat /etc/apt/sources.list.d/#{name}.list"
@@ -251,14 +209,12 @@ module Pkgr
     end
 
     private
-    def bundler_version
-      @config.fetch('bundler_version') { '1.1.3' }
-    end
 
     def debian_file(filename)
       file = File.join(root, Pkgr::DEBIAN_DIR, filename)
       raise "The debian/changelog file does not exist. Please generate it first." unless File.exist?(file)
       file
     end
+
   end
 end

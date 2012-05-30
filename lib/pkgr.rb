@@ -1,4 +1,6 @@
-require 'pkgr/app'
+require 'pkgr/base_app'
+require 'pkgr/generic_app'
+require 'pkgr/rails_app'
 require 'pkgr/railtie' if defined?(Rails)
 
 module Pkgr
@@ -6,6 +8,14 @@ module Pkgr
 
   def self.setup(root)
     setup_config(root)
+  end
+
+  def self.create_app(root, config)
+    if defined?(Rails)
+      Pkgr::RailsApp.new(root, config)
+    else
+      Pkgr::GenericApp.new(root, config)
+    end
   end
 
   protected
