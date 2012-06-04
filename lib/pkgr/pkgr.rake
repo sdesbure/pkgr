@@ -35,7 +35,7 @@ namespace :pkgr do
       desc "Builds the debian package"
       task :deb do
         build_host, build_port = ENV.fetch('HOST') { 'localhost' }.split(":")
-        APP.build_debian_package(build_host, build_port)
+        APP.build_debian_package(build_host, build_port || 22)
       end
     end
     
@@ -43,7 +43,7 @@ namespace :pkgr do
       desc "Release the latest package on a custom APT repository"
       task :deb do
         apt_host, apt_port = ENV.fetch('HOST') { 'localhost' }.split(":")
-        APP.release_debian_package(apt_host, apt_port)
+        APP.release_debian_package(apt_host, apt_port || 22)
       end
     end
   end
