@@ -35,7 +35,7 @@ module Pkgr
       @errors.clear
       @errors.push("is not a valid git repository") unless File.exist?(File.join(@root, ".git", "HEAD"))
       @errors.push("must have a name") unless @config.fetch('name')
-      @errors.push("must have a valid name ([a-zA-Z0-9_-])") unless @config.fetch('name').scan(/[^a-z0-9\_\-]/i)
+      @errors.push("must have a valid name ([a-zA-Z0-9-])") unless @config.fetch('name').scan(/[^a-z0-9\-]/i)
       @errors.push("must have a version") unless @config.fetch('version')
       @errors.push("must have a valid target architecture") unless @config.fetch('architecture')
       @errors.empty?
