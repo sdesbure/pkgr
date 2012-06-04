@@ -3,10 +3,10 @@
 require 'pkgr'
 require 'fileutils'
 
-ROOT = ENV.fetch('ROOT') { Rails.root }
+ROOT = ENV.fetch('ROOT') { defined?(Rails) ? Rails.root : PROJECT_ROOT }
 CONFIG = ENV.fetch('CONFIG') { File.join(ROOT, "config/pkgr.yml") }
 if File.exist?(CONFIG)
-  APP = Pkgr::App.new ROOT, CONFIG
+  APP = Pkgr.create_app(ROOT, CONFIG)
   APP.valid? || fail("There is an issue with the app you're trying to package: #{APP.errors.join(", ")}")
 end
 
@@ -34,16 +34,16 @@ namespace :pkgr do
     namespace :build do
       desc "Builds the debian package"
       task :deb do
-        build_host = ENV.fetch('HOST') { 'localhost' }
-        APP.build_debian_package(build_host)
+        build_host, build_port = ENV.fetch('HOST') { 'localhost' }.split(":")
+        APP.build_debian_package(build_host, build_port)
       end
     end
     
     namespace :release do
       desc "Release the latest package on a custom APT repository"
       task :deb do
-        apt_host = ENV.fetch('HOST') { 'localhost' }
-        APP.release_debian_package(apt_host)
+        apt_host, apt_port = ENV.fetch('HOST') { 'localhost' }.split(":")
+        APP.release_debian_package(apt_host, apt_port)
       end
     end
   end
