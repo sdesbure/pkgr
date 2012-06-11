@@ -17,6 +17,16 @@ namespace :pkgr do
     Pkgr.setup(ROOT)
   end
 
+  desc "Get the current package version"
+  task :version do
+    puts YAML.load_file(CONFIG)["version"]
+  end
+
+  desc "Get the name of the package"
+  task :name do
+    puts YAML.load_file(CONFIG)["name"]
+  end
+
   if defined?(APP)
     task :generate do
       APP.generate_required_files
