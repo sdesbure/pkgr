@@ -1,7 +1,7 @@
 require 'pkgr/base_app'
 
 module Pkgr
-  class RailsApp
+  class RailsApp < BaseApp
 
     # Creates an executable file for easy launch of the server/console/rake tasks once it is installed.
     # E.g. /usr/bin/my-app console, /usr/bin/my-app server start -p 8080
