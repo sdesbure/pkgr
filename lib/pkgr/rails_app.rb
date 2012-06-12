@@ -1,7 +1,7 @@
 require 'pkgr/base_app'
 
 module Pkgr
-  class RailsApp
+  class RailsApp < BaseApp
 
     # Creates an executable file for easy launch of the server/console/rake tasks once it is installed.
     # E.g. /usr/bin/my-app console, /usr/bin/my-app server start -p 8080
@@ -20,7 +20,7 @@ module Pkgr
         archive = "#{name}-#{version}"
         sh "scp -P #{port} #{File.expand_path("../data/config/pre_boot.rb", __FILE__)} #{host}:/tmp/"
         cmd = %Q{
-          git archive #{git_ref} --prefix=#{archive}/ | ssh #{host} -p 2222 'cat - > /tmp/#{archive}.tar &&
+          git archive #{git_ref} --prefix=#{archive}/ | ssh #{host} -p #{port} 'cat - > /tmp/#{archive}.tar &&
             set -x && rm -rf /tmp/#{archive} &&
             cd /tmp && tar xf #{archive}.tar && cd #{archive} &&
             cat config/boot.rb >> /tmp/pre_boot.rb && cp -f /tmp/pre_boot.rb config/boot.rb &&
