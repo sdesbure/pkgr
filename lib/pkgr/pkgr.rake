@@ -53,7 +53,8 @@ namespace :pkgr do
       desc "Release the latest package on a custom APT repository"
       task :deb do
         apt_host, apt_port = ENV.fetch('HOST') { 'localhost' }.split(":")
-        APP.release_debian_package(apt_host, apt_port || 22)
+        apt_user = ENV.fetch('USER') {''}
+        APP.release_debian_package(apt_host, apt_port || 22, apt_user)
       end
     end
   end
