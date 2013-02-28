@@ -16,18 +16,19 @@ module Pkgr
     def build_debian_package(host, port = 22, user = "")
       puts "Building debian package on '#{host}'..."
       Dir.chdir(root) do
+        user_host = user.empty? ? host : "#{user}@#{host}"
         Pkgr.mkdir("pkg")
         archive = "#{name}-#{version}"
-        sh "scp -P #{port} #{File.expand_path("../data/config/pre_boot.rb", __FILE__)} #{host}:/tmp/"
+        sh "scp -P #{port} #{File.expand_path("../data/config/pre_boot.rb", __FILE__)} #{user_host}:/tmp/"
         cmd = %Q{
-          git archive #{git_ref} --prefix=#{archive}/ | ssh #{host} -p #{port} 'cat - > /tmp/#{archive}.tar &&
+          git archive #{git_ref} --prefix=#{archive}/ | ssh #{user_host} -p #{port} 'cat - > /tmp/#{archive}.tar &&
             set -x && rm -rf /tmp/#{archive} &&
             cd /tmp && tar xf #{archive}.tar && cd #{archive} &&
             cat config/boot.rb >> /tmp/pre_boot.rb && cp -f /tmp/pre_boot.rb config/boot.rb &&
             #{debian_steps.join(" &&\n")}'
         }
         sh cmd
-        user_host = user.empty? ? host : "#{user}@#{host}"
+        
         # Fetch the .deb, and put it in the `pkg` directory
         sh "scp -P #{port} #{user_host}:/tmp/#{name}_#{version}* pkg/"
       end
