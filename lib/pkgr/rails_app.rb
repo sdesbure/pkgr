@@ -13,7 +13,7 @@ module Pkgr
       puts "Correctly set up executable file. Try running './bin/#{name} console'."
     end
 
-    def build_debian_package(host, port = 22)
+    def build_debian_package(host, port = 22, user = "")
       puts "Building debian package on '#{host}'..."
       Dir.chdir(root) do
         Pkgr.mkdir("pkg")
@@ -27,8 +27,9 @@ module Pkgr
             #{debian_steps.join(" &&\n")}'
         }
         sh cmd
+        user_host = user.empty? ? host : "#{user}@#{host}"
         # Fetch the .deb, and put it in the `pkg` directory
-        sh "scp -P #{port} #{host}:/tmp/#{name}_#{version}* pkg/"
+        sh "scp -P #{port} #{user_host}:/tmp/#{name}_#{version}* pkg/"
       end
     end
 
