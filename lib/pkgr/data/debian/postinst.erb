@@ -34,7 +34,10 @@ case "$1" in
         # Creating the user if it does not exist
         if ! getent passwd $USER > /dev/null; then
           adduser --no-create-home --system --group $GROUP
+          su - postgres -c 'createuser -d -S -R rails'
+          su - $USER -c "/usr/bin/$NAME rake db:create"
         fi
+        su - $USER -c "/usr/bin/$NAME rake db:migrate"
         chown -R $USER.$GROUP /etc/$NAME/
         chown -R $USER.$GROUP /var/db/$NAME/
         chown -R $USER.$GROUP /var/log/$NAME/
