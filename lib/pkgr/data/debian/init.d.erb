@@ -23,12 +23,14 @@ PIDFILE=/var/run/$NAME.pid
 
 SET_PATH="cd $APP_ROOT"
 
+GEM_HOME="$APP_ROOT/vendor/bundle/ruby/1.9.1"
+
 # Include defaults if available
 if [ -f /etc/default/$NAME ] ; then
   . /etc/default/$NAME
 fi
 
-CMD="$SET_PATH; bundle exec unicorn_rails -c config/unicorn.rb $DAEMON_OPTS"
+CMD="$SET_PATH; GEM_HOME=$GEM_HOME $GEM_HOME/bin/bundle exec unicorn_rails -c config/unicorn.rb $DAEMON_OPTS"
 
 old_pid="$PIDFILE.oldbin"
 
