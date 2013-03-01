@@ -33,6 +33,7 @@ case "$1" in
     remove)
         cleanup
         deluser $USER || true
+        delgroup $USER || true
     ;;
     upgrade|deconfigure)
         cleanup
