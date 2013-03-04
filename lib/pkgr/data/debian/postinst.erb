@@ -33,15 +33,33 @@ case "$1" in
         " > /usr/bin/$NAME && chmod a+x /usr/bin/$NAME
         # Creating the user if it does not exist
         if ! getent passwd $USER > /dev/null; then
+          echo "new install detected: "
+          echo "  * creating system user"
           adduser --no-create-home --system --group $GROUP
+          echo "  * creating db user"
           su - postgres -c 'createuser -d -S -R rails'
-          /usr/bin/$NAME rake db:create
+          echo "  * creating db table"
+          su - postgres -c "createdb -O $USER cpe_conf_production"
+          echo "  * copying nginx configuration"
+          rm /etc/nginx/sites-enabled/default
+          ln -s /etc/nginx/sites-available/$NAME.conf /etc/nginx/sites-enabled/
+          /etc/init.d/nginw reload
+          fresh_install = true
         fi
-        /usr/bin/$NAME rake db:migrate
         chown -R $USER.$GROUP /etc/$NAME/
         chown -R $USER.$GROUP /var/db/$NAME/
         chown -R $USER.$GROUP /var/log/$NAME/
         chown -R $USER.$GROUP $PREFIX/$NAME
+        if !$fresh_install ; then
+          echo "upgrade detected:"
+        fi
+        echo "  * migrating the database"
+        su - -c "cd $APP_ROOT && RAILS_ENV='production' GEM_HOME=$GEM_HOME $GEM_HOME/bin/rake db:migrate" -s /bin/bash $USER
+
+        if $fresh_install ; then
+          echo "  * bootstrapping the system"
+          su - -c "cd $APP_ROOT && RAILS_ENV='production' GEM_HOME=$GEM_HOME $GEM_HOME/bin/bundle exec rake setup" -s /bin/bash $USER
+        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
