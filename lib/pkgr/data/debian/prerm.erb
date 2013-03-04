@@ -33,7 +33,8 @@ case "$1" in
     remove)
         cleanup
         deluser $USER || true
-        delgroup $USER || true
+        su - postgres -c "dropdb cpe_conf_production"                                                                                                                                 |~
+        su - postgres -c "dropuser $USER"         
     ;;
     upgrade|deconfigure)
         cleanup
