@@ -8,7 +8,7 @@ module Pkgr
     end
 
     def build_debian_package(host, port = 22)
-      puts "Building debian package on '#{host}'..."
+      puts "Building generic debian package on '#{host}'..."
       Dir.chdir(root) do
         Pkgr.mkdir("pkg")
         archive = "#{name}-#{version}"

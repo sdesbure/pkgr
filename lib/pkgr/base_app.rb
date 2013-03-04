@@ -196,8 +196,8 @@ module Pkgr
       latest = Dir[File.join(root, "pkg", "*.deb")].find{|file| file =~ /#{version}/}
       raise "No .deb available in pkg/" if latest.nil?
       latest_name = File.basename(latest)
-      sh "scp -P #{port} #{latest} #{host}:/tmp/"
-      sh "ssh -p #{port} #{host} 'sudo mkdir -p #{apt_directory} && sudo chown $USER #{apt_directory} && mv /tmp/#{latest_name} #{apt_directory} && cd #{apt_directory} && ( which dpkg-scanpackages || sudo apt-get update && sudo apt-get install dpkg-dev -y ) && dpkg-scanpackages . | gzip -f9 > Packages.gz'"
+      sh "scp -P #{port} #{latest} #{host}:~/tmp/"
+      sh "ssh -p #{port} #{host} 'sudo mkdir -p #{apt_directory} && sudo chown $USER #{apt_directory} && mv ~/tmp/#{latest_name} #{apt_directory} && cd #{apt_directory} && ( which dpkg-scanpackages || sudo apt-get update && sudo apt-get install dpkg-dev -y ) && dpkg-scanpackages . | gzip -f9 > Packages.gz'"
       puts "****"
       puts "Now you just need to serve the '#{apt_directory}' directory over HTTP, and add a new source to your APT configuration on the production server:"
       puts "$ cat /etc/apt/sources.list.d/#{name}.list"
